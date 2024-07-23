@@ -21,10 +21,8 @@
         <h1>AI Query Interface</h1>
         <select id="model">
             <option value="tinyllama">Tiny-Llama</option>
-            <option value="orca-mini">Oraca-Mini</option>
-            <option value="moondream">Moondream</option>
+            <option value="orca-mini">Orca-Mini</option>
             <option value="llama2">Llama 2</option>
-            <option value="mistral">Mistral</option>
         </select>
         <textarea id="prompt" rows="4" placeholder="Enter your query here..."></textarea>
         <button onclick="generateResponse()">Generate Response</button>
@@ -32,6 +30,11 @@
     </div>
 
     <script>
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
         async function generateResponse() {
             const prompt = document.getElementById('prompt').value;
             const model = document.getElementById('model').value;
@@ -62,13 +65,20 @@
 
         function adjustWidth() {
             const responseDiv = document.getElementById('response');
-            // Check if the content height exceeds the visible height
             if (responseDiv.scrollHeight > responseDiv.clientHeight) {
                 responseDiv.style.overflowY = 'scroll';
             } else {
                 responseDiv.style.overflowY = 'auto';
             }
         }
+
+        window.onload = () => {
+            const queryParam = getQueryParam('query');
+            if (queryParam) {
+                document.getElementById('prompt').value = queryParam;
+                generateResponse();
+            }
+        };
     </script>
 </body>
 </html>
