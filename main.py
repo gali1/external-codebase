@@ -31,35 +31,33 @@ def index():
     """Render the index.html template."""
     return render_template("index.html")
 
-def generate_response(prompt, max_length=100):
-    """Generate response using the model directly."""
+def generate_response(prompt, max_length=150):
+    """You are an AI programming assistant, provide the best possible answer to any question given."""
     try:
         # Tokenize input
         input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
         
-        # Generate text in batches
-        output = []
-        for i in range(0, max_length, BATCH_SIZE):
-            batch_length = min(BATCH_SIZE, max_length - i)
-            batch_output = model.generate(
-                input_ids,
-                max_length=input_ids.shape[1] + batch_length,
-                num_return_sequences=1,
-                no_repeat_ngram_size=2,
-                do_sample=True,
-                top_k=50,
-                top_p=0.95,
-                temperature=0.7
-            )
-            
-            # Decode and add to output
-            batch_text = tokenizer.decode(batch_output[0], skip_special_tokens=True)
-            output.append(batch_text[len(prompt):])
-            
-            # Update input_ids for next iteration
-            input_ids = batch_output
-
-        return "".join(output)
+        # Generate text
+        output = model.generate(
+            input_ids,
+            max_length=max_length,
+            num_return_sequences=1,
+            no_repeat_ngram_size=2,
+            do_sample=True,
+            top_k=50,
+            top_p=0.95,
+            temperature=0.7
+        )
+        
+        # Decode and return the generated response
+        generated_text = tokenizer.decode(output[0], skip_special_tokens=True)
+        
+        # Ensure response starts with the prompt (to maintain context)
+        if generated_text.startswith(prompt):
+            return generated_text[len(prompt):].strip()
+        else:
+            return generated_text.strip()
+    
     except Exception as e:
         print(f"Error generating response: {str(e)}")
         return None
@@ -68,8 +66,8 @@ def generate_response(prompt, max_length=100):
 def generate():
     """Handle POST requests to generate responses."""
     data = request.json
-    prompt = data["prompt"]
-    max_length = data.get("max_length", 100)
+    prompt = data.get("prompt", "")
+    max_length = data.get("max_length", 150)
 
     # Use ThreadPoolExecutor to run the generation asynchronously
     future = executor.submit(generate_response, prompt, max_length)
