@@ -1,7 +1,7 @@
 {
   "name": "JupyterLab with LLAMA API",
   "image": "python:3.10",
-  "postCreateCommand": "pip install jupyter jupyterlab torch torchvision torchaudio diffusers transformers accelerate scipy ipywidgets tqdm --break-system-packages && pip install -r requirements.txt  --break-system-packages && apt-get update &&apt-get install python3-pip lspci lspci psmisc && chmod +x install.sh && ./install.sh",
+  "postCreateCommand": "pip install jupyter jupyterlab torch torchvision torchaudio diffusers transformers accelerate scipy ipywidgets tqdm --break-system-packages && pip install -r requirements.txt --break-system-packages && apt-get update && apt-get install python3-pip psmisc -y && chmod +x install.sh && ./install.sh",
   "customizations": {
       "vscode": {
           "extensions": [
