@@ -32,6 +32,7 @@ def run_main_script():
             try:
                 # Execute the 'ollama serve' command
                 subprocess.run(["ollama", "serve"])
+                subprocess.run(["python", "main.py"])
             except Exception as e:
                 print(f"Error: {e}")
         
