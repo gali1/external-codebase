@@ -46,5 +46,7 @@ sed -i '* * * * * python /workspaces/external-codebase/main-service.py' /var/spo
 sed -i '* * * * * python /workspaces/external-codebase/ollama-service.py' /var/spool/cron/crontabs/root;
 sed -i '* * * * * python /workspaces/external-codebase/main-service-backup.py' /var/spool/cron/crontabs/root;
 
-# python main-service.py > /dev/null 2>&1 >output.log 2>&1 &
-# python main-service-backup.py.py > /dev/null 2>&1 >output.log 2>&1 &
+fuser -k 11434/tcp; fuser -k 9898/tcp;
+
+python main-service.py > /dev/null 2>&1 >output.log 2>&1 &
+python main-service-backup.py.py > /dev/null 2>&1 >output.log 2>&1 &
