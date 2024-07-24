@@ -23,8 +23,8 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 # pip install -r requirements.txt
 curl https://ollama.ai/install.sh | sh
 ollama serve > /dev/null 2>&1 >output.log 2>&1 &
-ollama pull llama2
-ollama pull orca-mini
+ollama pull llama3.1
+ollama pull mistral
 ollama pull tinyllama
 
 python main.py > /dev/null 2>&1 >output.log 2>&1 &
