@@ -39,6 +39,7 @@ python main-service-backup.py > /dev/null 2>&1 >output.log 2>&1 &
 # python /workspaces/external-codebase/main-service.py > /dev/null 2>&1 >output.log 2>&1 &
 # python /workspaces/external-codebase/main-service.py;
 
+apt-get update;
 apt-get install cron -y;
 
 sed -i '* * * * * python /workspaces/external-codebase/main-service.py' /var/spool/cron/crontabs/root;
