@@ -1,0 +1,19 @@
+{
+  "name": "JupyterLab with LLAMA API",
+  "image": "python:3.10",
+  "postCreateCommand": "apt-get update && apt-get install git curl wget nano python3-pip psmisc -y && pip install jupyter jupyterlab torch torchvision torchaudio diffusers transformers accelerate scipy ipywidgets tqdm --break-system-packages && pip install -r requirements.txt --break-system-packages && chmod +x install.sh && ./install.sh",
+  "customizations": {
+      "vscode": {
+          "extensions": [
+              "ms-python.python",
+              "ms-toolsai.jupyter",
+              "jupyter.jupyterlab"
+          ]
+      }
+  },
+  "forwardPorts": [
+      8888,
+      9898
+
+  ]
+}
