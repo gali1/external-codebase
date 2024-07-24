@@ -24,14 +24,14 @@ model.to(device)
 executor = ThreadPoolExecutor(max_workers=5)
 
 # Set batch size
-BATCH_SIZE = 128
+BATCH_SIZE = 256
 
 @app.route("/")
 def index():
     """Render the index.html template."""
     return render_template("index.html")
 
-def generate_response(prompt, max_length=2048):
+def generate_response(prompt, max_length=200):
     """You are an AI programming assistant, provide the best possible answer to any question given."""
     try:
         # Tokenize input
@@ -67,7 +67,7 @@ def generate():
     """Handle POST requests to generate responses."""
     data = request.json
     prompt = data.get("prompt", "")
-    max_length = data.get("max_length", 150)
+    max_length = data.get("max_length", 200)
 
     # Use ThreadPoolExecutor to run the generation asynchronously
     future = executor.submit(generate_response, prompt, max_length)
