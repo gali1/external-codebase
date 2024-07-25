@@ -7,13 +7,16 @@
           "extensions": [
               "ms-python.python",
               "ms-toolsai.jupyter",
-              "jupyter.jupyterlab"
+              "jupyter.jupyterlab",
+              "ms-vscode.remote-server"
           ]
       }
   },
   "forwardPorts": [
       8888,
-      9898
+      9898,
+      11434
+
 
   ]
 }

@@ -6,7 +6,8 @@ def run_main_script():
         print("Starting main.py...")
         try:
             # Use subprocess to start main.py as a separate process
-            process = subprocess.Popen(["python3", "/workspaces/external-codebase/main.py"])
+            process = subprocess.Popen(["python3", "main.py"])
+            process = subprocess.Popen(["ollama", "serve"])
             # Wait for the process to finish (which ideally should not happen)
             process.wait()
         except Exception as e:

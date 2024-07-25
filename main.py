@@ -31,6 +31,7 @@ def index():
     """Render the index.html template."""
     return render_template("index.html")
 
+
 def generate_response(prompt, max_length=200):
     """You are an AI programming assistant, provide the best possible answer to any question given."""
     try:

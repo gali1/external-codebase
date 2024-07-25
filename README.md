@@ -68,7 +68,7 @@ load_dotenv()
 app = Flask(__name__)
 
 # Retrieve OLLAMA_API_URL from environment variables, default to local endpoint
-OLLAMA_API_URL = os.getenv('OLLAMA_API_URL', 'http://localhost:11434/api/generate')
+OLLAMA_API_URL = os.getenv('OLLAMA_API_URL', 'http://automatic-waffle-jj4w7w644px25447-11434.app.github.dev:443/api/generate')
 
 # Use a requests Session for connection pooling
 session = requests.Session()
@@ -245,7 +245,7 @@ python-dotenv hypercorn
 ### .env
 
 ```
-OLLAMA_API_URL=http://localhost:11434/api/generate
+OLLAMA_API_URL=http://automatic-waffle-jj4w7w644px25447-11434.app.github.dev:443/api/generate
 ```
 
 ## Code Breakdown
