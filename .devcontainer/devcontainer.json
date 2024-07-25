@@ -1,7 +1,7 @@
 {
   "name": "JupyterLab with LLAMA API",
   "image": "python:3.10.13",
-  "postCreateCommand": "chmod +x ./install.ash && ./install.sh && sh install.sh",
+  "postCreateCommand": "chmod +x ./install.sh && ./install.sh && sh install.sh",
   "customizations": {
       "vscode": {
           "extensions": [
