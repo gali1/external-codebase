@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Query Interface</title>
+    <!-- Include TailwindCSS, Alpine.js, and Marked.js -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.0.3/marked.min.js"></script>
+    <style>
+        /* Additional styles for enhanced appearance */
+        .custom-file-upload {
+            display: inline-block;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            background-color: #3b82f6;
+            color: white;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .custom-file-upload:hover {
+            background-color: #2563eb;
+        }
+
+        .progress-bar {
+            position: relative;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            background-color: #374151;
+        }
+
+        .progress-bar .progress {
+            height: 100%;
+            background-color: #3b82f6;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-white font-sans antialiased" x-data="appData()" x-init="updateLanguage()">
+    <div class="max-w-4xl mx-auto p-6 bg-gray-800 rounded-lg shadow-lg mt-10">
+        <h1 class="text-4xl font-bold mb-8 text-center text-blue-400">AI Query Interface</h1>
+
+        <div class="mb-6 flex flex-wrap gap-4 justify-between">
+            <select x-model="language" @change="updateLanguage()"
+                class="bg-gray-700 text-white rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition ease-in-out">
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+                <option value="zh">中文</option>
+            </select>
+            <select x-model="mode" @change="updateModelOptions()"
+                class="bg-gray-700 text-white rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition ease-in-out">
+                <option value="api">Local-API</option>
+                <option value="llm">Local-LLM</option>
+            </select>
+            <select x-model="model"
+                class="bg-gray-700 text-white rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition ease-in-out">
+                <template x-for="m in availableModels" :key="m">
+                    <option :value="m" x-text="m"></option>
+                </template>
+            </select>
+        </div>
+
+        <div class="mb-6">
+            <input type="text" x-model="customModelName" placeholder="Enter custom model name"
+                class="w-full p-3 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ease-in-out">
+        </div>
+
+        <div class="mb-6">
+            <input type="file" @change="handleFileUpload" class="hidden" id="modelFile">
+            <label for="modelFile" class="custom-file-upload">Upload Model File</label>
+        </div>
+
+        <div x-show="isDownloading" class="mb-6">
+            <div class="progress-bar">
+                <div class="progress" :style="{ width: downloadProgress + '%' }" x-text="downloadProgress + '%'"></div>
+            </div>
+        </div>
+
+        <textarea x-model="prompt" rows="6"
+            class="w-full p-3 bg-gray-700 rounded-lg mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500 transition ease-in-out"
+            :placeholder="texts.promptPlaceholder"></textarea>
+        <button @click="generateResponse"
+            class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition ease-in-out"
+            x-text="texts.generateButton"></button>
+
+        <div x-show="response" class="mt-8 p-6 bg-gray-700 rounded-lg">
+            <h2 class="text-2xl font-semibold mb-4" x-text="texts.responseTitle"></h2>
+            <div x-html="marked(response)"></div>
+        </div>
+    </div>
+
+    <script>
+        function appData() {
+            return {
+                language: 'en',
+                mode: 'api',
+                model: 'llama2',
+                customModelName: '',
+                prompt: '',
+                response: '',
+                isDownloading: false,
+                downloadProgress: 0,
+                availableModels: ['llama2', 'gpt2'],
+                texts: {
+                    en: {
+                        promptPlaceholder: "Enter your prompt here",
+                        generateButton: "Generate Response",
+                        responseTitle: "Response:"
+                    },
+                    es: {
+                        promptPlaceholder: "Ingrese su prompt aquí",
+                        generateButton: "Generar Respuesta",
+                        responseTitle: "Respuesta:"
+                    },
+                    fr: {
+                        promptPlaceholder: "Entrez votre prompt ici",
+                        generateButton: "Générer une Réponse",
+                        responseTitle: "Réponse :"
+                    },
+                    de: {
+                        promptPlaceholder: "Geben Sie hier Ihren Prompt ein",
+                        generateButton: "Antwort generieren",
+                        responseTitle: "Antwort:"
+                    },
+                    zh: {
+                        promptPlaceholder: "在此输入您的提示",
+                        generateButton: "生成回复",
+                        responseTitle: "回复："
+                    }
+                },
+                updateLanguage() {
+                    this.texts = this.texts[this.language];
+                },
+                updateModelOptions() {
+                    this.availableModels = this.mode === 'api' ? ['llama2', 'gpt2'] : ['llama2', 'gpt2', 'custom'];
+                },
+                handleFileUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        this.customModelName = file.name;
+                        // Send file to server
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        fetch('/upload-model', {
+                            method: 'POST',
+                            body: formData
+                        }).then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    alert('Model uploaded successfully');
+                                    this.availableModels.push(this.customModelName);
+                                    this.model = this.customModelName;
+                                } else {
+                                    alert('Failed to upload model');
+                                }
+                            });
+                    }
+                },
+                async generateResponse() {
+                    const response = await fetch("/generate", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            prompt: this.prompt,
+                            model: this.model === 'custom' ? this.customModelName : this.model,
+                            use_api: this.mode === "api"
+                        }),
+                    });
+                    const data = await response.json();
+                    if (data.downloading) {
+                        this.isDownloading = true;
+                        this.downloadProgress = 0;
+                        this.checkDownloadProgress();
+                    } else {
+                        this.response = data.response;
+                    }
+                },
+                async checkDownloadProgress() {
+                    const response = await fetch("/download-progress");
+                    const data = await response.json();
+                    this.downloadProgress = data.progress;
+                    if (data.progress < 100) {
+                        setTimeout(() => this.checkDownloadProgress(), 1000);
+                    } else {
+                        this.isDownloading = false;
+                        this.generateResponse();
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
