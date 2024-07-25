@@ -1,11 +1,9 @@
 import os
 import subprocess
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify
 import requests
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
-from werkzeug.serving import run_simple
-from werkzeug.utils import secure_filename
 import llama_cpp
 from gpt4all import GPT4All
 import threading
@@ -14,13 +12,16 @@ import logging
 import signal
 import sys
 from flask_cors import CORS
-
+from waitress import serve
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Initialize Flask application
 app = Flask(__name__)
+
+# Initialize CORS
+CORS(app)
 
 # Retrieve OLLAMA_API_URL from environment variables, default to local endpoint
 OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434/api/generate")
@@ -79,7 +80,7 @@ def generate_response_api(prompt, model, params):
         return response.json()
     except requests.RequestException as e:
         logger.error(f"Error with API request: {e}")
-        return None
+        return {"error": str(e)}
 
 def generate_response_local(prompt, model, params):
     """Generate response using local LLM."""
@@ -92,7 +93,7 @@ def generate_response_local(prompt, model, params):
         return local_models[model].generate(prompt, max_tokens=100)
     except Exception as e:
         logger.error(f"Error generating local response: {e}")
-        return None
+        return {"error": str(e)}
 
 @app.route("/")
 def index():
@@ -129,7 +130,7 @@ def generate():
         response = future.result(timeout=60)
 
         if response:
-            return jsonify({"response": response})
+            return jsonify(response)
         else:
             return jsonify({"error": "Error generating response"}), 500
     except KeyError as e:
@@ -161,8 +162,7 @@ def download_model(model_name):
     """Download model and save it to the server."""
     global download_progress, is_downloading
     try:
-        # Implement download logic here, I'm assuming GPT4All.download_model is a placeholder
-        # Replace this with actual downloading logic based on your requirements
+        # Implement download logic here
         GPT4All.download_model(model_name, os.path.join(app.config['UPLOAD_FOLDER'], model_name))
         is_downloading = False
         download_progress = 100
@@ -186,6 +186,12 @@ def monitor_services():
 
         time.sleep(60)  # Check every minute
 
+def signal_handler(sig, frame):
+    """Handle termination signals."""
+    logger.info(f"Received signal {sig}. Exiting...")
+    # Clean up tasks can be added here if needed
+    sys.exit(0)
+
 if __name__ == "__main__":
     generate_ssl_cert()
 
@@ -194,18 +200,14 @@ if __name__ == "__main__":
     monitor_thread.start()
 
     # Set up signal handling in the main thread
-    def signal_handler(sig, frame):
-        logger.info(f"Received signal {sig}. Exiting...")
-        # Clean up tasks can be added here if needed
-        sys.exit(0)
-
     signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
+    # Run the app using Waitress
     try:
-        # Run the app on both HTTP and HTTPS using run_simple
-        http_thread = threading.Thread(target=run_simple, args=('0.0.0.0', 8877, app), kwargs={'use_reloader': True, 'use_debugger': True, 'threaded': True})
-        http_thread.start()
-
-        run_simple('0.0.0.0', 9899, app, use_reloader=True, use_debugger=True, ssl_context=('cert.pem', 'key.pem'), threaded=True)
+        logger.info("Starting server on http://0.0.0.0:8877 and https://0.0.0.0:9899")
+        # Waitress does not support HTTPS directly, so for HTTPS you'll need a reverse proxy like Nginx.
+        # For development purposes, run HTTP directly.
+        serve(app, host='0.0.0.0', port=8877)
     except Exception as e:
-        logger.error(f"Error starting servers: {e}")
+        logger.error(f"Error starting server: {e}")
