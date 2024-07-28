@@ -12,6 +12,7 @@ from urllib.parse import quote
 from werkzeug.serving import run_simple
 from werkzeug.utils import secure_filename
 import llama_cpp
+import time
 # from gpt4all import GPT4All
 
 # Load environment variables from .env file
@@ -198,3 +199,46 @@ if __name__ == "__main__":
         run_simple('0.0.0.0', 9899, app, use_reloader=False, use_debugger=True, ssl_context=('cert.pem', 'key.pem'))
     except Exception as e:
         print(f"Error starting servers: {e}")
+
+def daemonize():
+    # Perform the first fork
+    if os.fork() > 0:
+        sys.exit()
+
+    # Decouple from parent environment
+    os.setsid()
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
+
+    # Perform the second fork
+    if os.fork() > 0:
+        sys.exit()
+
+    # Change working directory to root
+    os.chdir('/')
+
+    # Redirect standard file descriptors
+    sys.stdout.flush()
+    sys.stderr.flush()
+    with open('/dev/null', 'r') as f:
+        os.dup2(f.fileno(), sys.stdin.fileno())
+    with open('/dev/null', 'a') as f:
+        os.dup2(f.fileno(), sys.stdout.fileno())
+        os.dup2(f.fileno(), sys.stderr.fileno())
+
+def run_daemon():
+    while True:
+        try:
+            daemonize()
+            index()
+            generate_response_local()
+            generate_response_api()
+        except Exception as e:
+            print(f"Daemon crashed: {e}")
+            time.sleep(5)  # Wait before restarting
+
+if __name__ == "__main__":
+    run_daemon()
+    index()
+    generate_response_local()
+    generate_response_api()
+    
